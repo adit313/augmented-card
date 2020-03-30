@@ -110,6 +110,7 @@
 				TargetAttributes = {
 					ED0C33EF219967CC009173F3 = {
 						CreatedOnToolsVersion = 10.1;
+						LastSwiftMigration = 1140;
 					};
 				};
 			};
@@ -299,15 +300,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = JZNN87YRMJ;
+				DEVELOPMENT_TEAM = 3BFDD573V5;
 				INFOPLIST_FILE = AugmentedCard/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.viget.AugmentedCard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.viget.AugmentedImages;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -317,15 +319,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = JZNN87YRMJ;
+				DEVELOPMENT_TEAM = 3BFDD573V5;
 				INFOPLIST_FILE = AugmentedCard/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.viget.AugmentedCard;
+				PRODUCT_BUNDLE_IDENTIFIER = com.viget.AugmentedImages;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

@@ -15,7 +15,41 @@ extension ViewController: ARSCNViewDelegate {
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        
+        guard let imageAnchor = anchor as? ARImageAnchor else { return }
+
+        // Delegate rendering tasks to our `updateQueue` thread to keep things thread-safe!
+        updateQueue.async {
+            let physicalWidth = imageAnchor.referenceImage.physicalSize.width
+            let physicalHeight = imageAnchor.referenceImage.physicalSize.height
+
+            // Create a plane geometry to visualize the initial position of the detected image
+            let mainPlane = SCNPlane(width: physicalWidth, height: physicalHeight)
+
+            // This bit is important. It helps us create occlusion so virtual things stay hidden behind the detected image
+            mainPlane.firstMaterial?.colorBufferWriteMask = .alpha
+
+            // Create a SceneKit root node with the plane geometry to attach to the scene graph
+            // This node will hold the virtual UI in place
+            let mainNode = SCNNode(geometry: mainPlane)
+            mainNode.eulerAngles.x = -.pi / 2
+            mainNode.renderingOrder = -1
+            mainNode.opacity = 1
+
+            // Add the plane visualization to the scene
+            node.addChildNode(mainNode)
+
+            // Perform a quick animation to visualize the plane on which the image was detected.
+            // We want to let our users know that the app is responding to the tracked image.
+            self.highlightDetection(on: mainNode, width: physicalWidth, height: physicalHeight, completionHandler: {
+
+                // Introduce virtual content
+                self.displayDetailView(on: mainNode, xOffset: physicalWidth)
+
+                // Animate the WebView to the right
+                self.displayWebView(on: mainNode, xOffset: physicalWidth)
+
+            })
+        }
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
@@ -36,11 +70,55 @@ extension ViewController: ARSCNViewDelegate {
     // MARK: - SceneKit Helpers
     
     func displayDetailView(on rootNode: SCNNode, xOffset: CGFloat) {
-        
+        let detailPlane = SCNPlane(width: xOffset, height: xOffset * 1.4)
+        detailPlane.cornerRadius = 0.25
+
+        let detailNode = SCNNode(geometry: detailPlane)
+        detailNode.geometry?.firstMaterial?.diffuse.contents = SKScene(fileNamed: "DetailScene")
+
+        // Due to the origin of the iOS coordinate system, SCNMaterial's content appears upside down, so flip the y-axis.
+        detailNode.geometry?.firstMaterial?.diffuse.contentsTransform = SCNMatrix4Translate(SCNMatrix4MakeScale(1, -1, 1), 0, 1, 0)
+        detailNode.position.z -= 0.01
+        detailNode.opacity = 0
+
+        rootNode.addChildNode(detailNode)
+        detailNode.runAction(.sequence([
+            .wait(duration: 1.0),
+            .fadeOpacity(to: 1.0, duration: 1.5),
+            .moveBy(x: xOffset * -1.4, y: 0, z: -0.05, duration: 1.5),
+            .moveBy(x: 0, y: 0, z: -0.05, duration: 0.2)
+            ])
+        )
     }
     
     func displayWebView(on rootNode: SCNNode, xOffset: CGFloat) {
-        
+        // Xcode yells at us about the deprecation of UIWebView in iOS 12.0, but there is currently
+        // a bug that does now allow us to use a WKWebView as a texture for our webViewNode
+        // Note that UIWebViews should only be instantiated on the main thread!
+        DispatchQueue.main.async {
+            let request = URLRequest(url: URL(string: "https://en.wikipedia.org/wiki/The_Starry_Night")!)
+            let webView = UIWebView(frame: CGRect(x: 0, y: 0, width: 500, height: 900))
+            webView.loadRequest(request)
+
+            let webViewPlane = SCNPlane(width: xOffset, height: xOffset * 1.4)
+            webViewPlane.cornerRadius = 0.01
+
+            let webViewNode = SCNNode(geometry: webViewPlane)
+
+            // Set the web view as webViewPlane's primary texture
+            webViewNode.geometry?.firstMaterial?.diffuse.contents = webView
+            webViewNode.position.z -= 0.01
+            webViewNode.opacity = 0
+
+            rootNode.addChildNode(webViewNode)
+            webViewNode.runAction(.sequence([
+                .wait(duration: 3.0),
+                .fadeOpacity(to: 1.0, duration: 1.5),
+                .moveBy(x: xOffset * 1.4, y: 0, z: -0.05, duration: 1.5),
+                .moveBy(x: 0, y: 0, z: -0.05, duration: 0.2)
+                ])
+            )
+        }
     }
     
     func highlightDetection(on rootNode: SCNNode, width: CGFloat, height: CGFloat, completionHandler block: @escaping (() -> Void)) {
